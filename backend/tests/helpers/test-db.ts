@@ -1,13 +1,19 @@
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import * as schema from '../../src/db/schema.js';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const migrationsFolder = resolve(here, '../../migrations');
 
 export interface TestDb {
   container: StartedPostgreSqlContainer;
   url: string;
   sql: ReturnType<typeof postgres>;
-  db: PostgresJsDatabase;
+  db: PostgresJsDatabase<typeof schema>;
   stop: () => Promise<void>;
 }
 
@@ -20,7 +26,9 @@ export async function startTestDb(): Promise<TestDb> {
 
   const url = container.getConnectionUri();
   const sql = postgres(url, { max: 4 });
-  const db = drizzle(sql);
+  const db = drizzle(sql, { schema });
+
+  await migrate(db, { migrationsFolder });
 
   return {
     container,
