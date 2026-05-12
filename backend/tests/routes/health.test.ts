@@ -1,12 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { buildServer } from '../../src/server.js';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { startTestApp, type TestApp } from '../helpers/test-app.js';
 
 describe('GET /health', () => {
-  it('returns 200 with status ok', async () => {
-    const app = await buildServer({ apiKey: 'test-key' });
-    const response = await app.inject({ method: 'GET', url: '/health' });
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: 'ok' });
-    await app.close();
+  let t: TestApp;
+  beforeAll(async () => { t = await startTestApp(); }, 90000);
+  afterAll(async () => { await t.close(); });
+
+  it('returns 200 with status ok and does not require auth', async () => {
+    const r = await t.app.inject({ method: 'GET', url: '/health' });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual({ status: 'ok' });
   });
 });
