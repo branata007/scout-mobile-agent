@@ -96,3 +96,71 @@ export type StateRow = typeof states.$inferSelect;
 export type NewStateRow = typeof states.$inferInsert;
 export type Edge = typeof edges.$inferSelect;
 export type NewEdge = typeof edges.$inferInsert;
+
+export const scorecards = pgTable('scorecards', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  scope: scorecardScopeEnum('scope').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  perf: integer('perf').notNull(),
+  a11y: integer('a11y').notNull(),
+  ux: integer('ux').notNull(),
+  polish: integer('polish').notNull(),
+  summary: text('summary'),
+  sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const findings = pgTable('findings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  scope: findingScopeEnum('scope').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  type: findingTypeEnum('type').notNull(),
+  severity: findingSeverityEnum('severity').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  suggestedFix: text('suggested_fix'),
+  personaId: text('persona_id'),
+  sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'set null' }),
+  status: findingStatusEnum('status').notNull().default('open'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const personaReports = pgTable('persona_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id')
+    .notNull()
+    .references(() => sessions.id, { onDelete: 'cascade' }),
+  personaId: text('persona_id').notNull(),
+  summary: text('summary').notNull(),
+  painPoints: jsonb('pain_points').notNull().default(sql`'[]'::jsonb`),
+  highlights: jsonb('highlights').notNull().default(sql`'[]'::jsonb`),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const candidateSimilarPairs = pgTable('candidate_similar_pairs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  stateAId: uuid('state_a_id')
+    .notNull()
+    .references(() => states.id, { onDelete: 'cascade' }),
+  stateBId: uuid('state_b_id')
+    .notNull()
+    .references(() => states.id, { onDelete: 'cascade' }),
+  phashMatch: boolean('phash_match').notNull(),
+  treeMatch: boolean('tree_match').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  resolution: pairResolutionEnum('resolution'),
+});
+
+export type Scorecard = typeof scorecards.$inferSelect;
+export type NewScorecard = typeof scorecards.$inferInsert;
+export type Finding = typeof findings.$inferSelect;
+export type NewFinding = typeof findings.$inferInsert;
+export type PersonaReport = typeof personaReports.$inferSelect;
+export type NewPersonaReport = typeof personaReports.$inferInsert;
+export type CandidateSimilarPair = typeof candidateSimilarPairs.$inferSelect;
+export type NewCandidateSimilarPair = typeof candidateSimilarPairs.$inferInsert;
