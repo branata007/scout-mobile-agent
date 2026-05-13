@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "bin": { "scout": "./dist/main.js" },
-  "engines": { "node": ">=22.0.0" },
+  "bin": {
+    "scout": "./dist/main.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "tsx src/main.ts",
     "build": "tsc",
@@ -14,15 +18,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "commander": "^12.1.0",
     "@iarna/toml": "^2.2.5",
+    "commander": "^12.1.0",
     "kleur": "^4.1.5"
   },
   "devDependencies": {
+    "@fastify/multipart": "^10.0.0",
     "@types/node": "^22.0.0",
-    "typescript": "^5.6.0",
+    "fastify": "^5.0.0",
     "tsx": "^4.19.0",
-    "vitest": "^2.1.0",
-    "fastify": "^5.0.0"
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   }
 }
