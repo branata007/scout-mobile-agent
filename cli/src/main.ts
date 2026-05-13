@@ -4,6 +4,7 @@ import { runInit } from './commands/init.js';
 import { runRecord } from './commands/record.js';
 import { runDone } from './commands/done.js';
 import { runUpload } from './commands/upload.js';
+import { runStatus } from './commands/status.js';
 
 async function main(): Promise<void> {
   const program = buildProgram();
@@ -70,6 +71,18 @@ async function main(): Promise<void> {
       });
       console.log(`scout: uploaded ${r.bundleDir}`);
       console.log(`scout: run id ${r.runId}`);
+    });
+
+  program
+    .command('status')
+    .description('Show current project + last recording + last upload.')
+    .action(async () => {
+      const s = await runStatus({ cwd: process.cwd(), env: process.env });
+      console.log(`project:   ${s.project.name} (${s.project.id})`);
+      console.log(`package:   ${s.project.appPackage}`);
+      console.log(`backend:   ${s.backendUrl}`);
+      console.log(`last bundle: ${s.lastBundleDir ?? '(none)'}`);
+      console.log(`last run:    ${s.lastRunId ?? '(not uploaded)'}`);
     });
 
   try {
