@@ -70,9 +70,13 @@ export async function runRecord(input: RecordInput): Promise<string> {
     intent: input.intent,
   });
 
-  const session = await recorder.run();
-  eventSource.cleanup();
-  rl.close();
+  let session;
+  try {
+    session = await recorder.run();
+  } finally {
+    eventSource.cleanup();
+    rl.close();
+  }
 
   console.log();
   console.log(kleur.cyan(`scout: writing bundle to ${bundleDir}`));

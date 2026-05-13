@@ -31,7 +31,14 @@ export async function runUpload(input: UploadInput): Promise<UploadResult> {
   if (!existsSync(apkPath)) {
     throw new CliError(1, 'no_apk', `No apk.apk in ${bundleDir}.`);
   }
-  const trace = JSON.parse(await readFile(traceJsonPath, 'utf-8')) as TraceBundleV1;
+  const traceRaw = await readFile(traceJsonPath, 'utf-8');
+  let trace: TraceBundleV1;
+  try {
+    trace = JSON.parse(traceRaw) as TraceBundleV1;
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e);
+    throw new CliError(1, 'bad_bundle', `Could not parse ${traceJsonPath}: ${reason}`);
+  }
   const apk = await readFile(apkPath);
 
   const client = new BackendClient({ url: config.backend.url, apiKey: config.backend.apiKey });

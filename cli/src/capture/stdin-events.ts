@@ -21,8 +21,8 @@ export class StdinEventSource implements RecorderEventSource {
   private resolver: ((ev: RecorderEvent) => void) | null = null;
   private readonly buffer: RecorderEvent[] = [];
   private pendingActionType: ActionType | null = null;
-  private rl: readline.Interface | null = null;
   private setup = false;
+  private busy = false;
 
   constructor(private readonly opts: StdinEventSourceOpts) {
     this.input = opts.input ?? process.stdin;
@@ -36,6 +36,7 @@ export class StdinEventSource implements RecorderEventSource {
 
     this.input.on('keypress', async (_str: string, key: { name?: string; ctrl?: boolean; sequence?: string }) => {
       if (!key) return;
+      if (this.busy) return;
       if (key.ctrl && key.name === 'c') {
         this.emit({ type: 'quit' });
         return;
@@ -48,10 +49,15 @@ export class StdinEventSource implements RecorderEventSource {
         const actionType = this.pendingActionType ?? 'tap';
         this.pendingActionType = null;
         if (actionType === 'input') {
-          if (this.input.isTTY) this.input.setRawMode(false);
-          const value = await this.opts.promptForInput('value> ');
-          if (this.input.isTTY) this.input.setRawMode(true);
-          this.emit({ type: 'capture', actionType, value });
+          this.busy = true;
+          try {
+            if (this.input.isTTY) this.input.setRawMode(false);
+            const value = await this.opts.promptForInput('value> ');
+            if (this.input.isTTY) this.input.setRawMode(true);
+            this.emit({ type: 'capture', actionType, value });
+          } finally {
+            this.busy = false;
+          }
         } else {
           this.emit({ type: 'capture', actionType });
         }
@@ -91,6 +97,5 @@ export class StdinEventSource implements RecorderEventSource {
 
   cleanup(): void {
     if (this.input.isTTY) this.input.setRawMode(false);
-    this.rl?.close();
   }
 }
