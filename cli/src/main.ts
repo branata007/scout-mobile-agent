@@ -2,6 +2,7 @@
 import { buildProgram, reportError } from './program.js';
 import { runInit } from './commands/init.js';
 import { runRecord } from './commands/record.js';
+import { runDone } from './commands/done.js';
 
 async function main(): Promise<void> {
   const program = buildProgram();
@@ -36,6 +37,19 @@ async function main(): Promise<void> {
         intent: opts.intent,
         serial: opts.serial,
       });
+    });
+
+  program
+    .command('done')
+    .description('Report the status of the most recent recording (recovery helper).')
+    .option('--flow <name>', 'Specific flow name (default: most recent)')
+    .action(async (opts: { flow?: string }) => {
+      const r = await runDone({ cwd: process.cwd(), flowName: opts.flow });
+      if (r.finalized) {
+        console.log(`scout: bundle at ${r.bundleDir} is finalized.`);
+      } else {
+        console.log(`scout: bundle at ${r.bundleDir} is INCOMPLETE (no trace.json). Re-record the flow.`);
+      }
     });
 
   try {
