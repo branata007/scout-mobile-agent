@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { buildProgram, reportError } from './program.js';
 import { runInit } from './commands/init.js';
+import { runRecord } from './commands/record.js';
 
 async function main(): Promise<void> {
   const program = buildProgram();
@@ -20,6 +21,21 @@ async function main(): Promise<void> {
         backendUrl: opts.backendUrl,
       });
       console.log(`scout: initialized project "${opts.name}" — wrote scout.toml`);
+    });
+
+  program
+    .command('record <flow>')
+    .description('Record a happy-path flow against a connected emulator.')
+    .option('--intent <text>', 'Optional intent annotation')
+    .option('--serial <serial>', 'Specific emulator serial (default: first connected)')
+    .action(async (flow: string, opts: { intent?: string; serial?: string }) => {
+      await runRecord({
+        cwd: process.cwd(),
+        env: process.env,
+        flowName: flow,
+        intent: opts.intent,
+        serial: opts.serial,
+      });
     });
 
   try {
