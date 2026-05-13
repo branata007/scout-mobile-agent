@@ -3,6 +3,7 @@ import { buildProgram, reportError } from './program.js';
 import { runInit } from './commands/init.js';
 import { runRecord } from './commands/record.js';
 import { runDone } from './commands/done.js';
+import { runUpload } from './commands/upload.js';
 
 async function main(): Promise<void> {
   const program = buildProgram();
@@ -50,6 +51,25 @@ async function main(): Promise<void> {
       } else {
         console.log(`scout: bundle at ${r.bundleDir} is INCOMPLETE (no trace.json). Re-record the flow.`);
       }
+    });
+
+  program
+    .command('upload')
+    .description('Upload the most recent recording to the backend.')
+    .option('--flow <name>', 'Specific flow name (default: most recent)')
+    .option('--personas <list>', 'Comma-separated persona names', 'happy-rusher,low-vision,first-timer')
+    .option('--intent <text>', 'Optional intent annotation')
+    .action(async (opts: { flow?: string; personas: string; intent?: string }) => {
+      const personas = opts.personas.split(',').map((s) => s.trim()).filter(Boolean);
+      const r = await runUpload({
+        cwd: process.cwd(),
+        env: process.env,
+        flowName: opts.flow,
+        personas,
+        intent: opts.intent,
+      });
+      console.log(`scout: uploaded ${r.bundleDir}`);
+      console.log(`scout: run id ${r.runId}`);
     });
 
   try {
